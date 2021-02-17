@@ -47,12 +47,11 @@ class Star extends Pattern {
 
 class Vertex {
 	public outgoingEdges: Map<Vertex, Edge> = new Map()
-	public incomingEdges: Map<Vertex, Edge> = new Map()
 
 	constructor(public name: string) {}
 
 	public addEdge(to: Vertex, pattern: Pattern): Edge {
-		if (this.outgoingEdges.has(to) ?? to.incomingEdges.has(this)) {
+		if (this.outgoingEdges.has(to)) {
 			// This edge already exists. Merge the current pattern and this new one
 			pattern = new Or([pattern, this.outgoingEdges.get(to)?.pattern as Pattern]) // merge patterns
 			// The edge does not have to be removed, it will simply be overridden in the next step
@@ -60,7 +59,6 @@ class Vertex {
 
 		const edge = new Edge(this, to, pattern)
 		this.outgoingEdges.set(to, edge)
-		to.incomingEdges.set(this, edge)
 
 		return edge
 	}
@@ -94,7 +92,6 @@ class NFA {
 
 	public removeEdge({ from, to }: Edge): void {
 		from.outgoingEdges.delete(to)
-		to.incomingEdges.delete(from)
 		this.d.get(from)?.delete(to)
 	}
 
@@ -116,11 +113,10 @@ class NFA {
 
 		for (const q1 of Q) {
 			if (q1 === F) continue // No edges come out of the new F
-			const q1OutgoingEdges = new Set(q1.outgoingEdges.values())
 			for (const q2 of Q) {
 				if (q2 === q0) continue // No edges go in the new q0
 				// If there is already an edge from q1 to q2, then don't create one
-				if ([...q2.incomingEdges.values()].some((edge) => q1OutgoingEdges.has(edge))) continue
+				if (q1.outgoingEdges.has(q2)) continue
 				// If there is none yet, then create one
 				q1.addEdge(q2, new EmptySet())
 			}
@@ -149,7 +145,6 @@ class NFA {
 			}
 			// Rip out qrip
 			qRip.outgoingEdges.forEach((edge) => this.removeEdge(edge))
-			qRip.incomingEdges.forEach((edge) => this.removeEdge(edge))
 			this.Q.shift()
 		}
 	}
