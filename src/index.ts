@@ -12,12 +12,12 @@ class Literal extends Pattern {
 }
 class EmptySet extends Pattern {
 	public toString(): string {
-		return '∅'
+		return '[]'
 	}
 }
 class Epsilon extends Pattern {
 	public toString(): string {
-		return 'ϵ'
+		return ''
 	}
 }
 class Or extends Pattern {
@@ -25,7 +25,7 @@ class Or extends Pattern {
 		super()
 	}
 	public toString(): string {
-		return this.patterns.map((pattern) => pattern.toString()).join(' ∪ ')
+		return this.patterns.map((pattern) => pattern.toString()).join('|')
 	}
 }
 class Concat extends Pattern {
@@ -47,11 +47,12 @@ class Star extends Pattern {
 
 class Vertex {
 	public outgoingEdges: Map<Vertex, Edge> = new Map()
+	public incomingEdges: Map<Vertex, Edge> = new Map()
 
 	constructor(public name: string) {}
 
 	public addEdge(to: Vertex, pattern: Pattern): Edge {
-		if (this.outgoingEdges.has(to)) {
+		if (this.outgoingEdges.has(to) ?? to.incomingEdges.has(this)) {
 			// This edge already exists. Merge the current pattern and this new one
 			pattern = new Or([pattern, this.outgoingEdges.get(to)?.pattern as Pattern]) // merge patterns
 			// The edge does not have to be removed, it will simply be overridden in the next step
@@ -59,6 +60,7 @@ class Vertex {
 
 		const edge = new Edge(this, to, pattern)
 		this.outgoingEdges.set(to, edge)
+		to.incomingEdges.set(this, edge)
 
 		return edge
 	}
@@ -92,6 +94,7 @@ class NFA {
 
 	public removeEdge({ from, to }: Edge): void {
 		from.outgoingEdges.delete(to)
+		to.incomingEdges.delete(from)
 		this.d.get(from)?.delete(to)
 	}
 
@@ -145,6 +148,7 @@ class NFA {
 			}
 			// Rip out qrip
 			qRip.outgoingEdges.forEach((edge) => this.removeEdge(edge))
+			qRip.incomingEdges.forEach((edge) => this.removeEdge(edge))
 			this.Q.shift()
 		}
 	}
