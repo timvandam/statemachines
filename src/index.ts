@@ -23,6 +23,7 @@ class Epsilon extends Pattern {
 class Or extends Pattern {
 	constructor(public patterns: Pattern[]) {
 		super()
+		this.patterns = patterns.filter((e) => !(e instanceof EmptySet))
 	}
 	public toString(): string {
 		return this.patterns.map((pattern) => pattern.toString()).join('|')
@@ -31,9 +32,11 @@ class Or extends Pattern {
 class Concat extends Pattern {
 	constructor(public patterns: Pattern[]) {
 		super()
+		// @ts-ignore
+		if (this.patterns.some((p) => p instanceof EmptySet)) return new EmptySet()
 	}
 	public toString(): string {
-		return this.patterns.map((pattern) => pattern.toString()).join('')
+		return `(${this.patterns.map((pattern) => pattern.toString()).join('')})`
 	}
 }
 class Star extends Pattern {
@@ -41,6 +44,7 @@ class Star extends Pattern {
 		super()
 	}
 	public toString(): string {
+		if (this.p instanceof Epsilon) return this.p.toString()
 		return this.p.toString() + '*'
 	}
 }
@@ -165,7 +169,6 @@ const F = [Q[0]]
 const oddEvenNfa = new NFA(Q, E, d, q0, F)
 oddEvenNfa.generalize()
 oddEvenNfa.convert()
-console.log(oddEvenNfa)
 
 for (const q of oddEvenNfa.Q) {
 	for (const edge of q.outgoingEdges.values()) {
