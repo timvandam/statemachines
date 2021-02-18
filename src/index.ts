@@ -138,13 +138,12 @@ class NFA {
 	 */
 	public convert(): void {
 		while (this.Q.length > 2) {
-			const qRip = this.Q[0] // generalize put q0 and F at the end, so start at the beginning
+			const qRip = this.Q.shift() as Vertex // generalize put q0 and F at the end, so start at the beginning
 			console.log(`-------- ${qRip.name} --------`)
 			for (const qi of this.Q) {
 				if (qi === this.F[0]) continue
 				for (const qj of this.Q) {
 					if (qj === this.q0) continue
-					if (qi === qRip || qj === qRip) continue
 					const R1 = qi.outgoingEdges.get(qRip)?.pattern
 					const R2 = qRip.outgoingEdges.get(qRip)?.pattern
 					const R3 = qRip.outgoingEdges.get(qj)?.pattern
@@ -159,7 +158,6 @@ class NFA {
 			// Rip out qrip
 			qRip.outgoingEdges.forEach((edge) => this.removeEdge(edge))
 			qRip.incomingEdges.forEach((edge) => this.removeEdge(edge))
-			this.Q.shift()
 		}
 	}
 }
