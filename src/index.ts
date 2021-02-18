@@ -1,56 +1,5 @@
-abstract class Pattern {
-	abstract toString(): string
-}
-class Literal extends Pattern {
-	constructor(public l: string | symbol) {
-		super()
-	}
-	public toString(): string {
-		if (typeof this.l === 'string') return this.l
-		return this.l.toString().slice(7, -1)
-	}
-}
-class EmptySet extends Pattern {
-	public toString(): string {
-		return '[]'
-	}
-}
-class Epsilon extends Pattern {
-	public toString(): string {
-		return '[]{0}'
-	}
-}
-class Or extends Pattern {
-	constructor(public patterns: Pattern[]) {
-		super()
-		this.patterns = this.patterns.filter((p) => !(p instanceof EmptySet))
-	}
-	public toString(): string {
-		return `(${this.patterns
-			.map((pattern) => pattern.toString())
-			.filter((e) => e.length)
-			.join('|')})`
-	}
-}
-class Concat extends Pattern {
-	constructor(public patterns: Pattern[]) {
-		super()
-		this.patterns = patterns.filter((p) => !(p instanceof Epsilon))
-		if (this.patterns.some((p) => p instanceof EmptySet)) this.patterns = [new EmptySet()]
-	}
-	public toString(): string {
-		return `(${this.patterns.map((pattern) => pattern.toString()).join('')})`
-	}
-}
-class Star extends Pattern {
-	constructor(public p: Pattern) {
-		super()
-	}
-	public toString(): string {
-		if (this.p instanceof Epsilon) return this.p.toString()
-		return this.p.toString() + '*'
-	}
-}
+import { Concat, EmptySet, Epsilon, Literal, Or, Pattern, Star } from './regex'
+import simplify from './regex-simplify'
 
 class Vertex {
 	public outgoingEdges: Map<Vertex, Edge> = new Map()
@@ -77,7 +26,6 @@ class Edge {
 	constructor(public from: Vertex, public to: Vertex, public pattern: Pattern) {}
 }
 
-const epsilon = Symbol('epsilon')
 class NFA {
 	constructor(
 		public Q: Vertex[],
@@ -114,8 +62,8 @@ class NFA {
 		const q0 = new Vertex('GNFA Start')
 		const F = new Vertex('GNFA End')
 
-		q0.addEdge(this.q0, new Epsilon())
-		this.F.forEach((f) => f.addEdge(F, new Epsilon()))
+		this.addEdge(q0, this.q0, new Epsilon())
+		this.F.forEach((f) => this.addEdge(f, F, new Epsilon()))
 
 		this.Q.push(q0, F)
 		this.F = [F]
@@ -185,6 +133,14 @@ oddEvenNfa.convert()
 
 for (const q of oddEvenNfa.Q) {
 	for (const edge of q.outgoingEdges.values()) {
-		console.log('from', q.name, 'to', edge.to.name, edge.pattern.toString())
+		console.log('from', q.name, 'to', edge.to.name, simplify(edge.pattern).toString())
 	}
 }
+
+const q = new Or([
+	new Or([new Concat([new Or([new Literal('0'), new Literal('1')]), new Star(new EmptySet())]), new EmptySet()]),
+	new EmptySet(),
+])
+
+console.log(q.toString())
+console.log(simplify(q).toString())
