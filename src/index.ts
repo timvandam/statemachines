@@ -1,5 +1,6 @@
 import { Concat, EmptySet, Epsilon, Literal, Or, Pattern, Star } from './regex'
 import simplify from './regex-simplify'
+import * as util from 'util'
 
 class Vertex {
 	public outgoingEdges: Map<Vertex, Edge> = new Map()
@@ -127,6 +128,6 @@ oddEvenNfa.convert()
 
 for (const q of oddEvenNfa.Q) {
 	for (const edge of q.outgoingEdges.values()) {
-		console.log('from', q.name, 'to', edge.to.name, simplify(edge.pattern).toString())
+		console.log('from', q.name, 'to', edge.to.name, edge.pattern.toString())
 	}
 }

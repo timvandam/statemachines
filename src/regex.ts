@@ -48,7 +48,6 @@ export class Concat extends Pattern {
 	}
 }
 
-// TODO: Power
 export class Star extends Pattern {
 	constructor(public p: Pattern) {
 		super()
@@ -57,5 +56,27 @@ export class Star extends Pattern {
 	public toString(): string {
 		if (this.p instanceof Epsilon) return this.p.toString()
 		return this.p.toString() + '*'
+	}
+}
+
+export class Plus extends Pattern {
+	constructor(public p: Pattern) {
+		super()
+	}
+
+	public toString(): string {
+		if (this.p instanceof Epsilon) return this.p.toString()
+		return this.p.toString() + '+'
+	}
+}
+
+export class Quantified extends Pattern {
+	constructor(public n: number, public p: Pattern) {
+		super()
+	}
+
+	public toString(): string {
+		if (this.p instanceof Epsilon || this.n == 0) return this.p.toString()
+		return `(${this.p.toString()}{${this.n}})`
 	}
 }
