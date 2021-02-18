@@ -1,8 +1,7 @@
-import { Concat, EmptySet, Epsilon, Literal, Or, Pattern, Star } from './regex'
+import { Concat, EmptySet, Epsilon, Or, Pattern, Star } from './regex'
 import simplify from './regex-simplify'
-import * as util from 'util'
 
-class Vertex {
+export class Vertex {
 	public outgoingEdges: Map<Vertex, Edge> = new Map()
 	public incomingEdges: Map<Vertex, Edge> = new Map()
 
@@ -25,12 +24,13 @@ class Vertex {
 	}
 }
 
-class Edge {
+export class Edge {
 	constructor(public from: Vertex, public to: Vertex, public pattern: Pattern) {}
 }
 
-class NFA {
+export class NFA {
 	constructor(public Q: Vertex[], public d: Map<Vertex, Map<Vertex, Pattern>>, public q0: Vertex, public F: Vertex[]) {
+		if (!this.q0) throw new Error('Must have an initial state!')
 		d.forEach((destinations, from) => {
 			destinations.forEach((pattern, to) => {
 				this.addEdge(from, to, pattern)
@@ -67,9 +67,9 @@ class NFA {
 		this.F = [F]
 		this.q0 = q0
 
-		for (const q1 of Q) {
+		for (const q1 of this.Q) {
 			if (q1 === F) continue // No edges come out of the new F
-			for (const q2 of Q) {
+			for (const q2 of this.Q) {
 				if (q2 === q0) continue // No edges go in the new q0
 				// If there is already an edge from q1 to q2, then don't create one
 				if (q1.outgoingEdges.has(q2)) continue
@@ -107,27 +107,9 @@ class NFA {
 	}
 }
 
-const Q = [new Vertex('even'), new Vertex('odd')]
-const d: NFA['d'] = new Map([
-	[Q[0], new Map([[Q[1], new Or([new Literal('0'), new Literal('1')])]])],
-	[Q[1], new Map([[Q[0], new Or([new Literal('0'), new Literal('1')])]])],
-])
-const q0 = Q[0]
-const F = [Q[0]]
-const oddEvenNfa = new NFA(Q, d, q0, F)
-
 // Accepts ONLY "1"
 // const Q = [new Vertex('q0'), new Vertex('accept')]
 // const d: NFA['d'] = new Map([[Q[0], new Map([[Q[1], new Literal('1')]])]])
 // const q0 = Q[0]
 // const F = [Q[1]]
 // const oddEvenNfa = new NFA(Q, d, q0, F)
-
-oddEvenNfa.generalize()
-oddEvenNfa.convert()
-
-for (const q of oddEvenNfa.Q) {
-	for (const edge of q.outgoingEdges.values()) {
-		console.log('from', q.name, 'to', edge.to.name, edge.pattern.toString())
-	}
-}

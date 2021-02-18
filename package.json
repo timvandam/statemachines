@@ -6,7 +6,8 @@
 	"author": "Tim van Dam <timvandamcs@gmail.com>",
 	"license": "MIT",
 	"scripts": {
-		"dev": "ts-node -P tsconfig.json src/index.ts"
+		"dev": "ts-node -P tsconfig.json src/index.ts",
+		"gnfa": "ts-node -P tsconfig.json src/solveGnfa.ts"
 	},
 	"devDependencies": {
 		"jest": "^26.6.3",

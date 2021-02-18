@@ -5,7 +5,6 @@ import * as util from 'util'
 const last = <T extends readonly unknown[]>(arr: T): T extends [...infer H, infer R] ? R : never =>
 	arr[arr.length - 1] as ReturnType<typeof last>
 
-// todo: Add quantified. merge nested
 const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified, Plus })({
 	Literal: (l) => l,
 	EmptySet: (l) => l,
@@ -29,7 +28,6 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 		if (patterns.length === 1) return patterns[0]
 		if (patterns.some((p) => p instanceof EmptySet) || !patterns.length) return new EmptySet()
 		if (patterns.every((p) => p instanceof Literal)) return new Literal(patterns.map((l) => (l as Literal).l).join(''))
-		// TODO: Unpack nested concat
 		const unpackedConcat: Pattern[] = [] // unpacked nested concats
 		for (const pat of patterns) {
 			if (pat instanceof Concat) unpackedConcat.push(...pat.patterns)
@@ -59,8 +57,8 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 		return new Concat(mergedPatterns)
 	},
 	Epsilon: (l) => l,
-	Quantified: (l) => l,
-	Plus: (l) => l,
+	Quantified: ({ n, p }) => new Quantified(n, simplify(p)),
+	Plus: ({ p }) => new Plus(simplify(p)),
 })
 
 export default function simplify(pattern: Pattern): Pattern {
