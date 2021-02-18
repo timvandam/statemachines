@@ -23,17 +23,20 @@ class Epsilon extends Pattern {
 class Or extends Pattern {
 	constructor(public patterns: Pattern[]) {
 		super()
-		this.patterns = patterns.filter((e) => !(e instanceof EmptySet))
+		this.patterns = this.patterns.filter((p) => !(p instanceof EmptySet))
 	}
 	public toString(): string {
-		return this.patterns.map((pattern) => pattern.toString()).join('|')
+		return `(${this.patterns
+			.map((pattern) => pattern.toString())
+			.filter((e) => e.length)
+			.join('|')})`
 	}
 }
 class Concat extends Pattern {
 	constructor(public patterns: Pattern[]) {
 		super()
-		// @ts-ignore
-		if (this.patterns.some((p) => p instanceof EmptySet)) return new EmptySet()
+		this.patterns = patterns.filter((p) => !(p instanceof Epsilon))
+		if (this.patterns.some((p) => p instanceof EmptySet)) this.patterns = [new EmptySet()]
 	}
 	public toString(): string {
 		return `(${this.patterns.map((pattern) => pattern.toString()).join('')})`
@@ -125,7 +128,7 @@ class NFA {
 				// If there is already an edge from q1 to q2, then don't create one
 				if (q1.outgoingEdges.has(q2)) continue
 				// If there is none yet, then create one
-				q1.addEdge(q2, new EmptySet())
+				this.addEdge(q1, q2, new EmptySet())
 			}
 		}
 	}
@@ -136,11 +139,14 @@ class NFA {
 	public convert(): void {
 		while (this.Q.length > 2) {
 			const qRip = this.Q[0] // generalize put q0 and F at the end, so start at the beginning
+			console.log(`-------- ${qRip.name} --------`)
 			for (const qi of this.Q) {
 				if (qi === this.F[0]) continue
 				for (const qj of this.Q) {
 					if (qj === this.q0) continue
-					const R1 = qi.outgoingEdges.get(qj)?.pattern
+					if (qi === qRip || qj === qRip) continue
+					// TODO: Handle every qi qj s.t. qi -> qrip -> qj
+					const R1 = qi.outgoingEdges.get(qRip)?.pattern
 					const R2 = qRip.outgoingEdges.get(qRip)?.pattern
 					const R3 = qRip.outgoingEdges.get(qj)?.pattern
 					const R4 = qi.outgoingEdges.get(qj)?.pattern
@@ -148,6 +154,7 @@ class NFA {
 						throw new Error('Could not find d(q., q.) edges. Is this a GNFA?')
 					const pattern = new Or([new Concat([R1, new Star(R2), R3]), R4])
 					this.addEdge(qi, qj, pattern)
+					console.log(qi.name, qj.name, pattern.toString())
 				}
 			}
 			// Rip out qrip
@@ -158,15 +165,24 @@ class NFA {
 	}
 }
 
-const Q = [new Vertex('even'), new Vertex('odd')]
+// const Q = [new Vertex('even'), new Vertex('odd')]
+// const E = ['0', '1']
+// const d: NFA['d'] = new Map([
+// 	[Q[0], new Map([[Q[1], new Or([new Literal('0'), new Literal('1')])]])],
+// 	[Q[1], new Map([[Q[0], new Or([new Literal('0'), new Literal('1')])]])],
+// ])
+// const q0 = Q[0]
+// const F = [Q[0]]
+// const oddEvenNfa = new NFA(Q, E, d, q0, F)
+
+// Accepts ONLY "1"
+const Q = [new Vertex('q0'), new Vertex('accept')]
 const E = ['0', '1']
-const d: NFA['d'] = new Map([
-	[Q[0], new Map([[Q[1], new Or([new Literal('0'), new Literal('1')])]])],
-	[Q[1], new Map([[Q[0], new Or([new Literal('0'), new Literal('1')])]])],
-])
+const d: NFA['d'] = new Map([[Q[0], new Map([[Q[1], new Literal('1')]])]])
 const q0 = Q[0]
-const F = [Q[0]]
+const F = [Q[1]]
 const oddEvenNfa = new NFA(Q, E, d, q0, F)
+
 oddEvenNfa.generalize()
 oddEvenNfa.convert()
 
