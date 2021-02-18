@@ -29,13 +29,7 @@ class Edge {
 }
 
 class NFA {
-	constructor(
-		public Q: Vertex[],
-		public E: string[],
-		public d: Map<Vertex, Map<Vertex, Pattern>>,
-		public q0: Vertex,
-		public F: Vertex[]
-	) {
+	constructor(public Q: Vertex[], public d: Map<Vertex, Map<Vertex, Pattern>>, public q0: Vertex, public F: Vertex[]) {
 		d.forEach((destinations, from) => {
 			destinations.forEach((pattern, to) => {
 				this.addEdge(from, to, pattern)
@@ -113,22 +107,20 @@ class NFA {
 }
 
 const Q = [new Vertex('even'), new Vertex('odd')]
-const E = ['0', '1']
 const d: NFA['d'] = new Map([
 	[Q[0], new Map([[Q[1], new Or([new Literal('0'), new Literal('1')])]])],
 	[Q[1], new Map([[Q[0], new Or([new Literal('0'), new Literal('1')])]])],
 ])
 const q0 = Q[0]
 const F = [Q[0]]
-const oddEvenNfa = new NFA(Q, E, d, q0, F)
+const oddEvenNfa = new NFA(Q, d, q0, F)
 
 // Accepts ONLY "1"
 // const Q = [new Vertex('q0'), new Vertex('accept')]
-// const E = ['0', '1']
 // const d: NFA['d'] = new Map([[Q[0], new Map([[Q[1], new Literal('1')]])]])
 // const q0 = Q[0]
 // const F = [Q[1]]
-// const oddEvenNfa = new NFA(Q, E, d, q0, F)
+// const oddEvenNfa = new NFA(Q, d, q0, F)
 
 oddEvenNfa.generalize()
 oddEvenNfa.convert()
