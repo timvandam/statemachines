@@ -106,10 +106,3 @@ export class NFA {
 		}
 	}
 }
-
-// Accepts ONLY "1"
-// const Q = [new Vertex('q0'), new Vertex('accept')]
-// const d: NFA['d'] = new Map([[Q[0], new Map([[Q[1], new Literal('1')]])]])
-// const q0 = Q[0]
-// const F = [Q[1]]
-// const oddEvenNfa = new NFA(Q, d, q0, F)

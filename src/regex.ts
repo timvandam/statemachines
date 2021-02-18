@@ -21,7 +21,7 @@ export class EmptySet extends Pattern {
 
 export class Epsilon extends Pattern {
 	public toString(): string {
-		return ''
+		return '[]{0}'
 	}
 }
 
@@ -31,10 +31,7 @@ export class Or extends Pattern {
 	}
 
 	public toString(): string {
-		return `(${this.patterns
-			.map((pattern) => pattern.toString())
-			.filter((e) => e.length)
-			.join('|')})`
+		return `(${this.patterns.map((pattern) => pattern.toString()).join('|')})`
 	}
 }
 
@@ -54,7 +51,6 @@ export class Star extends Pattern {
 	}
 
 	public toString(): string {
-		if (this.p instanceof Epsilon) return this.p.toString()
 		return this.p.toString() + '*'
 	}
 }
@@ -65,7 +61,6 @@ export class Plus extends Pattern {
 	}
 
 	public toString(): string {
-		if (this.p instanceof Epsilon) return this.p.toString()
 		return this.p.toString() + '+'
 	}
 }
@@ -76,7 +71,6 @@ export class Quantified extends Pattern {
 	}
 
 	public toString(): string {
-		if (this.p instanceof Epsilon || this.n == 0) return this.p.toString()
 		return `(${this.p.toString()}{${this.n}})`
 	}
 }

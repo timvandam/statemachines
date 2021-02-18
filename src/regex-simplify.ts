@@ -37,7 +37,6 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 		for (let pat of unpackedConcat) {
 			if (util.isDeepStrictEqual(pat, last(mergedPatterns))) {
 				mergedPatterns.pop()
-				console.log(pat.toString(), 'merged')
 				pat = new Quantified(2, pat)
 			} else if (last(mergedPatterns) instanceof Quantified) {
 				const { n, p } = last(mergedPatterns) as Quantified
@@ -46,7 +45,7 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 					pat = new Quantified(n + 1, p)
 				}
 			} else if (last(mergedPatterns) instanceof Star) {
-				const { p } = last(mergedPatterns) as Plus
+				const { p } = last(mergedPatterns) as Star
 				if (util.isDeepStrictEqual(pat, p)) {
 					mergedPatterns.pop()
 					pat = new Plus(p)
@@ -62,5 +61,7 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 })
 
 export default function simplify(pattern: Pattern): Pattern {
-	return matcher(pattern) ?? new EmptySet()
+	const res = matcher(pattern)
+	if (!res) throw new Error('could no simplify')
+	return res
 }
