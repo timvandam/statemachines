@@ -145,7 +145,6 @@ class NFA {
 				for (const qj of this.Q) {
 					if (qj === this.q0) continue
 					if (qi === qRip || qj === qRip) continue
-					// TODO: Handle every qi qj s.t. qi -> qrip -> qj
 					const R1 = qi.outgoingEdges.get(qRip)?.pattern
 					const R2 = qRip.outgoingEdges.get(qRip)?.pattern
 					const R3 = qRip.outgoingEdges.get(qj)?.pattern
@@ -165,23 +164,23 @@ class NFA {
 	}
 }
 
-// const Q = [new Vertex('even'), new Vertex('odd')]
-// const E = ['0', '1']
-// const d: NFA['d'] = new Map([
-// 	[Q[0], new Map([[Q[1], new Or([new Literal('0'), new Literal('1')])]])],
-// 	[Q[1], new Map([[Q[0], new Or([new Literal('0'), new Literal('1')])]])],
-// ])
-// const q0 = Q[0]
-// const F = [Q[0]]
-// const oddEvenNfa = new NFA(Q, E, d, q0, F)
+const Q = [new Vertex('even'), new Vertex('odd')]
+const E = ['0', '1']
+const d: NFA['d'] = new Map([
+	[Q[0], new Map([[Q[1], new Or([new Literal('0'), new Literal('1')])]])],
+	[Q[1], new Map([[Q[0], new Or([new Literal('0'), new Literal('1')])]])],
+])
+const q0 = Q[0]
+const F = [Q[0]]
+const oddEvenNfa = new NFA(Q, E, d, q0, F)
 
 // Accepts ONLY "1"
-const Q = [new Vertex('q0'), new Vertex('accept')]
-const E = ['0', '1']
-const d: NFA['d'] = new Map([[Q[0], new Map([[Q[1], new Literal('1')]])]])
-const q0 = Q[0]
-const F = [Q[1]]
-const oddEvenNfa = new NFA(Q, E, d, q0, F)
+// const Q = [new Vertex('q0'), new Vertex('accept')]
+// const E = ['0', '1']
+// const d: NFA['d'] = new Map([[Q[0], new Map([[Q[1], new Literal('1')]])]])
+// const q0 = Q[0]
+// const F = [Q[1]]
+// const oddEvenNfa = new NFA(Q, E, d, q0, F)
 
 oddEvenNfa.generalize()
 oddEvenNfa.convert()
