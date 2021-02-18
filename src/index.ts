@@ -17,7 +17,7 @@ class EmptySet extends Pattern {
 }
 class Epsilon extends Pattern {
 	public toString(): string {
-		return ''
+		return '[]{0}'
 	}
 }
 class Or extends Pattern {
