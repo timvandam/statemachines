@@ -65,6 +65,16 @@ export class Plus extends Pattern {
 	}
 }
 
+export class Optional extends Pattern {
+	constructor(public p: Pattern) {
+		super()
+	}
+
+	public toString(): string {
+		return this.p.toString() + '?'
+	}
+}
+
 export class Quantified extends Pattern {
 	constructor(public n: number, public p: Pattern) {
 		super()

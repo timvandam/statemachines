@@ -1,13 +1,21 @@
-import { Literal, Or, Pattern, Epsilon, EmptySet, Star, Concat, Quantified, Plus } from './regex'
+import { Literal, Or, Pattern, Epsilon, EmptySet, Star, Concat, Quantified, Plus, Optional } from './regex'
 import match from './match'
 import * as util from 'util'
 
 const last = <T extends readonly unknown[]>(arr: T): T extends [...infer H, infer R] ? R : never =>
 	arr[arr.length - 1] as ReturnType<typeof last>
 
-const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified, Plus })({
+const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified, Plus, Optional })({
 	Literal: (l) => l,
 	EmptySet: (l) => l,
+	Epsilon: (l) => l,
+	Quantified: ({ n, p }) => new Quantified(n, simplify(p)),
+	Plus: ({ p }) => new Plus(simplify(p)),
+	Optional: ({ p }) => {
+		p = simplify(p)
+		if (p instanceof Optional) return p
+		return new Optional(p)
+	},
 	Or: ({ patterns }) => {
 		const newPatterns: Pattern[] = []
 		for (const pat of patterns.map(simplify).filter((p) => !(p instanceof EmptySet))) {
@@ -16,6 +24,8 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 		}
 		if (!newPatterns.length) return new EmptySet()
 		if (newPatterns.length === 1) return newPatterns[0]
+		if (newPatterns.find((p) => p instanceof Epsilon))
+			return simplify(new Optional(new Or(newPatterns.filter((p) => !(p instanceof Epsilon)))))
 		return new Or(newPatterns)
 	},
 	Star: ({ p }) => {
@@ -55,9 +65,6 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified
 		}
 		return new Concat(mergedPatterns)
 	},
-	Epsilon: (l) => l,
-	Quantified: ({ n, p }) => new Quantified(n, simplify(p)),
-	Plus: ({ p }) => new Plus(simplify(p)),
 })
 
 export default function simplify(pattern: Pattern): Pattern {
