@@ -14,6 +14,8 @@ class Vertex {
 			// The edge does not have to be removed, it will simply be overridden in the next step
 		}
 
+		pattern = simplify(pattern)
+
 		const edge = new Edge(this, to, pattern)
 		this.outgoingEdges.set(to, edge)
 		to.incomingEdges.set(this, edge)
@@ -41,10 +43,11 @@ class NFA {
 		})
 	}
 
-	public addEdge(from: Vertex, to: Vertex, pattern: Pattern): void {
-		pattern = from.addEdge(to, pattern).pattern // The pattern can change if two edges are merged
+	public addEdge(from: Vertex, to: Vertex, pattern: Pattern): Edge {
+		const edge = from.addEdge(to, pattern)
 		if (!this.d.has(from)) this.d.set(from, new Map())
-		this.d.get(from)?.set(to, pattern)
+		this.d.get(from)?.set(to, edge.pattern)
+		return edge
 	}
 
 	public removeEdge({ from, to }: Edge): void {
@@ -98,8 +101,7 @@ class NFA {
 					const R4 = qi.outgoingEdges.get(qj)?.pattern
 					if (R1 === undefined || R2 === undefined || R3 === undefined || R4 === undefined)
 						throw new Error('Could not find d(q., q.) edges. Is this a GNFA?')
-					const pattern = new Or([new Concat([R1, new Star(R2), R3]), R4])
-					this.addEdge(qi, qj, pattern)
+					const { pattern } = this.addEdge(qi, qj, new Or([new Concat([R1, new Star(R2), R3]), R4]))
 					console.log(qi.name, qj.name, pattern.toString())
 				}
 			}
@@ -136,11 +138,3 @@ for (const q of oddEvenNfa.Q) {
 		console.log('from', q.name, 'to', edge.to.name, simplify(edge.pattern).toString())
 	}
 }
-
-const q = new Or([
-	new Or([new Concat([new Or([new Literal('0'), new Literal('1')]), new Star(new EmptySet())]), new EmptySet()]),
-	new EmptySet(),
-])
-
-console.log(q.toString())
-console.log(simplify(q).toString())

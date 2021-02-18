@@ -48,6 +48,7 @@ export class Concat extends Pattern {
 	}
 }
 
+// TODO: Power
 export class Star extends Pattern {
 	constructor(public p: Pattern) {
 		super()
