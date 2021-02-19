@@ -7,7 +7,7 @@
  * ...
  */
 import { NFA, Vertex } from './index'
-import { Literal } from './regex'
+import { Epsilon, Literal } from './regex'
 
 function parse(str: string): void {
 	str = str.trim()
@@ -23,7 +23,7 @@ function parse(str: string): void {
 	const nfa = new NFA(_Q, new Map(), _q0, _F)
 	for (const line of d) {
 		const [qi, qj, symbol] = line.split(/\s/g)
-		nfa.addEdge(verticesByName[qi], verticesByName[qj], new Literal(symbol))
+		nfa.addEdge(verticesByName[qi], verticesByName[qj], symbol ? new Literal(symbol) : new Epsilon())
 	}
 	nfa.generalize()
 	nfa.convert()
@@ -50,4 +50,17 @@ odd even 0
 odd even 1
 `
 
-parse(even)
+const lab2q5 = `
+q0 q1 q2
+q0
+q1 q2
+q0 q1 a
+q0 q2 b
+q1 q2
+q1 q0 b
+q2 q2 a
+q2 q2 b
+q2 q1 b
+`
+
+parse(lab2q5)

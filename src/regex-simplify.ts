@@ -67,7 +67,7 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Concat, Quantified })({
 			mergedPatterns.push(pat)
 		}
 		return new Concat(mergedPatterns)
-	}, // TODO: Simplify (0+)? to 0*
+	},
 })
 
 export default function simplify(pattern: Pattern): Pattern {
