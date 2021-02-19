@@ -41,11 +41,7 @@ export class Concat extends Pattern {
 	}
 
 	public toString(): string {
-		return this.p
-			.map((pattern, i) =>
-				i !== this.p.length - 1 && pattern instanceof Or ? `(${pattern.toString()})` : pattern.toString()
-			)
-			.join('')
+		return this.p.map((pattern) => (pattern instanceof Or ? `(${pattern.toString()})` : pattern.toString())).join('')
 	}
 }
 
