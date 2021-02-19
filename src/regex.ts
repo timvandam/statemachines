@@ -41,7 +41,11 @@ export class Concat extends Pattern {
 	}
 
 	public toString(): string {
-		return this.p.map((pattern) => pattern.toString()).join('')
+		return this.p
+			.map((pattern, i) =>
+				i !== this.p.length - 1 && pattern instanceof Or ? `(${pattern.toString()})` : pattern.toString()
+			)
+			.join('')
 	}
 }
 
@@ -50,12 +54,29 @@ export class Quantified extends Pattern {
 		super()
 	}
 
+	public isOptional() {
+		return this.l === 0 && this.u === 1
+	}
+
+	public isPlus() {
+		return this.l === 1 && this.u === Infinity
+	}
+
+	public isStar() {
+		return this.l === 0 && this.u === Infinity
+	}
+
+	public isConstant() {
+		return this.l === this.u
+	}
+
 	public toString(): string {
 		let str = this.p.toString()
 		if (str.length > 1) str = `(${str})`
 		if (this.u === Infinity) {
 			if (this.l === 0) str += '*'
 			else if (this.l === 1) str += '+'
+			else str += `{${this.l}, ∞}`
 		} else if (this.l === 0 && this.u === 1) str += '?'
 		else if (this.l === this.u) str += `{${this.l}}`
 		else str += `{${this.l}, ${this.u}}`

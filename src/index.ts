@@ -115,3 +115,14 @@ export class NFA {
 		console.log('RESULT =', pattern.toString())
 	}
 }
+
+// console.log(simplify(new Quantified(0, Infinity, new Quantified(0, Infinity, new Literal('a')))).toString()) // (a*)* = a*
+// console.log(simplify(new Quantified(1, Infinity, new Quantified(1, Infinity, new Literal('a')))).toString()) // (a+)+ = a+
+// console.log(simplify(new Quantified(0, 1, new Quantified(0, 1, new Literal('a')))).toString()) // (a?)? = a?
+// console.log(simplify(new Quantified(0, 1, new Quantified(1, Infinity, new Literal('a')))).toString()) // (a+)? = a*
+// console.log(simplify(new Quantified(0, Infinity, new Quantified(1, Infinity, new Literal('a')))).toString()) // (a+)* = a*
+// console.log(simplify(new Quantified(0, Infinity, new Quantified(2, 2, new Literal('a')))).toString()) // (a{2})* = (a{2})*
+// console.log(simplify(new Quantified(1, Infinity, new Quantified(2, 2, new Literal('a')))).toString()) // (a{2})+ = (a{2})+
+// console.log(simplify(new Quantified(0, 1, new Quantified(2, 2, new Literal('a')))).toString()) // (a{2})? = (a{2})?
+// console.log(simplify(new Quantified(2, 2, new Quantified(2, 2, new Literal('a')))).toString()) // (a{2}){2} = a{4}
+// console.log(simplify(new Quantified(2, 2, new Quantified(1, Infinity, new Literal('a')))).toString()) // (a+){2} = a{2, Infinity}

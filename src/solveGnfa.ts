@@ -29,7 +29,7 @@ function parse(str: string): void {
 	nfa.convert()
 }
 
-parse(`
+const not110 = `
 a b c
 a
 a b c
@@ -38,4 +38,16 @@ b c 1
 c c 1
 b a 0
 a a 0
-`)
+`
+
+const even = `
+even odd
+even
+even
+even odd 0
+even odd 1
+odd even 0
+odd even 1
+`
+
+parse(even)

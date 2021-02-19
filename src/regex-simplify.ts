@@ -11,9 +11,15 @@ const matcher = match({ Literal, Or, Epsilon, EmptySet, Concat, Quantified })({
 	Literal: (l) => l,
 	EmptySet: (l) => l,
 	Epsilon: (l) => l,
-	Quantified: ({ l, u, p }) => {
+	Quantified: (instance) => {
+		let { l, u, p } = instance
 		p = simplify(p)
-		if (p instanceof Quantified) return new Quantified(l * p.l, u * p.u, p.p)
+		if (l === 0 && u === 0) return new Epsilon()
+		if (l === 1 && u === 1) return p
+		if (l === 0 && p instanceof EmptySet) return new Epsilon()
+		if (p instanceof EmptySet) return new EmptySet()
+		if (p instanceof Quantified && (instance.isConstant() || !p.isConstant()))
+			return new Quantified(l * p.l, u * p.u, p.p)
 		return new Quantified(l, u, p)
 	},
 	Or: ({ p }) => {
