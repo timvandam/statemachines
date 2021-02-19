@@ -26,61 +26,39 @@ export class Epsilon extends Pattern {
 }
 
 export class Or extends Pattern {
-	constructor(public patterns: Pattern[]) {
+	constructor(public p: Pattern[]) {
 		super()
 	}
 
 	public toString(): string {
-		return `(${this.patterns.map((pattern) => pattern.toString()).join('|')})`
+		return this.p.map((pattern) => pattern.toString()).join('|')
 	}
 }
 
 export class Concat extends Pattern {
-	constructor(public patterns: Pattern[]) {
+	constructor(public p: Pattern[]) {
 		super()
 	}
 
 	public toString(): string {
-		return `(${this.patterns.map((pattern) => pattern.toString()).join('')})`
-	}
-}
-
-export class Star extends Pattern {
-	constructor(public p: Pattern) {
-		super()
-	}
-
-	public toString(): string {
-		return this.p.toString() + '*'
-	}
-}
-
-export class Plus extends Pattern {
-	constructor(public p: Pattern) {
-		super()
-	}
-
-	public toString(): string {
-		return this.p.toString() + '+'
-	}
-}
-
-export class Optional extends Pattern {
-	constructor(public p: Pattern) {
-		super()
-	}
-
-	public toString(): string {
-		return this.p.toString() + '?'
+		return this.p.map((pattern) => pattern.toString()).join('')
 	}
 }
 
 export class Quantified extends Pattern {
-	constructor(public n: number, public p: Pattern) {
+	constructor(public l: number, public u: number, public p: Pattern) {
 		super()
 	}
 
 	public toString(): string {
-		return `(${this.p.toString()}{${this.n}})`
+		let str = this.p.toString()
+		if (str.length > 1) str = `(${str})`
+		if (this.u === Infinity) {
+			if (this.l === 0) str += '*'
+			else if (this.l === 1) str += '+'
+		} else if (this.l === 0 && this.u === 1) str += '?'
+		else if (this.l === this.u) str += `{${this.l}}`
+		else str += `{${this.l}, ${this.u}}`
+		return str
 	}
 }

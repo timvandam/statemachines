@@ -1,70 +1,67 @@
-import { Literal, Or, Pattern, Epsilon, EmptySet, Star, Concat, Quantified, Plus, Optional } from './regex'
+import { Literal, Or, Pattern, Epsilon, EmptySet, Concat, Quantified } from './regex'
 import match from './match'
 import * as util from 'util'
 
 const last = <T extends readonly unknown[]>(arr: T): T extends [...infer H, infer R] ? R : never =>
 	arr[arr.length - 1] as ReturnType<typeof last>
 
-const matcher = match({ Literal, Or, Epsilon, EmptySet, Star, Concat, Quantified, Plus, Optional })({
+const hasP = (obj: unknown): obj is { p: Pattern[] } => Object.prototype.hasOwnProperty.call(obj, 'p')
+
+const matcher = match({ Literal, Or, Epsilon, EmptySet, Concat, Quantified })({
 	Literal: (l) => l,
 	EmptySet: (l) => l,
 	Epsilon: (l) => l,
-	Quantified: ({ n, p }) => new Quantified(n, simplify(p)),
-	Plus: ({ p }) => new Plus(simplify(p)),
-	Optional: ({ p }) => {
+	Quantified: ({ l, u, p }) => {
 		p = simplify(p)
-		if (p instanceof Optional) return p
-		return new Optional(p)
+		if (p instanceof Quantified) return new Quantified(l * p.l, u * p.u, p.p)
+		return new Quantified(l, u, p)
 	},
-	Or: ({ patterns }) => {
+	Or: ({ p }) => {
 		const newPatterns: Pattern[] = []
-		for (const pat of patterns.map(simplify).filter((p) => !(p instanceof EmptySet))) {
-			if (pat instanceof Or) newPatterns.push(...pat.patterns)
+		for (const pat of p.map(simplify).filter((p) => !(p instanceof EmptySet))) {
+			if (pat instanceof Or)
+				newPatterns.push(...pat.p.filter((pat) => !newPatterns.some((p) => util.isDeepStrictEqual(p, pat))))
 			else if (!newPatterns.some((p) => util.isDeepStrictEqual(p, pat))) newPatterns.push(pat)
 		}
 		if (!newPatterns.length) return new EmptySet()
 		if (newPatterns.length === 1) return newPatterns[0]
 		if (newPatterns.find((p) => p instanceof Epsilon))
-			return simplify(new Optional(new Or(newPatterns.filter((p) => !(p instanceof Epsilon)))))
+			return simplify(new Quantified(0, 1, new Or(newPatterns.filter((p) => !(p instanceof Epsilon)))))
 		return new Or(newPatterns)
 	},
-	Star: ({ p }) => {
-		p = simplify(p)
-		return p instanceof EmptySet || p instanceof Epsilon ? new Epsilon() : new Star(p)
-	},
-	Concat: ({ patterns }) => {
-		patterns = patterns.map(simplify).filter((p) => !(p instanceof Epsilon))
-		if (!patterns.length) return new Epsilon()
-		if (patterns.length === 1) return patterns[0]
-		if (patterns.some((p) => p instanceof EmptySet) || !patterns.length) return new EmptySet()
-		if (patterns.every((p) => p instanceof Literal)) return new Literal(patterns.map((l) => (l as Literal).l).join(''))
+	Concat: ({ p }) => {
+		p = p.map(simplify).filter((p) => !(p instanceof Epsilon))
+		if (!p.length) return new Epsilon()
+		if (p.length === 1) return p[0]
+		if (p.some((p) => p instanceof EmptySet) || !p.length) return new EmptySet()
+		if (p.every((p) => p instanceof Literal)) return new Literal(p.map((l) => (l as Literal).l).join(''))
 		const unpackedConcat: Pattern[] = [] // unpacked nested concats
-		for (const pat of patterns) {
-			if (pat instanceof Concat) unpackedConcat.push(...pat.patterns)
+		for (const pat of p) {
+			if (pat instanceof Concat) unpackedConcat.push(...pat.p)
 			else unpackedConcat.push(pat)
 		}
-		const mergedPatterns: Pattern[] = [] // merge consecutive equivalent patterns
+		const mergedPatterns: Pattern[] = []
 		for (let pat of unpackedConcat) {
-			if (util.isDeepStrictEqual(pat, last(mergedPatterns))) {
-				mergedPatterns.pop()
-				pat = new Quantified(2, pat)
-			} else if (last(mergedPatterns) instanceof Quantified) {
-				const { n, p } = last(mergedPatterns) as Quantified
-				if (util.isDeepStrictEqual(pat, p)) {
+			if (mergedPatterns.length) {
+				const pat2 = last(mergedPatterns)
+				if (util.isDeepStrictEqual(pat, pat2)) {
+					pat = new Quantified(2, 2, pat)
 					mergedPatterns.pop()
-					pat = new Quantified(n + 1, p)
-				}
-			} else if (last(mergedPatterns) instanceof Star) {
-				const { p } = last(mergedPatterns) as Star
-				if (util.isDeepStrictEqual(pat, p)) {
+				} else if (pat2 instanceof Quantified && util.isDeepStrictEqual(pat, pat2.p)) {
+					pat = new Quantified(pat2.l + 1, pat2.u + 1, pat)
 					mergedPatterns.pop()
-					pat = new Plus(p)
+				} else if (pat instanceof Quantified && util.isDeepStrictEqual(pat.p, pat2)) {
+					pat = new Quantified(pat.l + 1, pat.u + 1, pat2)
+					mergedPatterns.pop()
+				} else if (pat instanceof Quantified && pat2 instanceof Quantified && util.isDeepStrictEqual(pat.p, pat2.p)) {
+					pat = new Quantified(pat.l + pat2.l, pat.u + pat2.u, pat.p)
+					mergedPatterns.pop()
 				}
 			}
 			mergedPatterns.push(pat)
 		}
 		return new Concat(mergedPatterns)
-	},
+	}, // TODO: Simplify (0+)? to 0*
 })
 
 export default function simplify(pattern: Pattern): Pattern {

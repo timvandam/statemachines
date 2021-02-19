@@ -1,4 +1,4 @@
-import { Concat, EmptySet, Epsilon, Or, Pattern, Star } from './regex'
+import { Concat, EmptySet, Epsilon, Literal, Or, Pattern, Quantified } from './regex'
 import simplify from './regex-simplify'
 import * as util from 'util'
 
@@ -15,9 +15,7 @@ export class Vertex {
 			// The edge does not have to be removed, it will simply be overridden in the next step
 		}
 
-		pattern = simplify(pattern)
-
-		const edge = new Edge(this, to, pattern)
+		const edge = new Edge(this, to, simplify(pattern))
 		this.outgoingEdges.set(to, edge)
 		to.incomingEdges.set(this, edge)
 
@@ -104,7 +102,7 @@ export class NFA {
 					const R4 = qi.outgoingEdges.get(qj)?.pattern
 					if (R1 === undefined || R2 === undefined || R3 === undefined || R4 === undefined)
 						throw new Error('Could not find d(q., q.) edges. Is this a GNFA?')
-					const { pattern } = this.addEdge(qi, qj, new Or([new Concat([R1, new Star(R2), R3]), R4]))
+					const { pattern } = this.addEdge(qi, qj, new Or([new Concat([R1, new Quantified(0, Infinity, R2), R3]), R4]))
 					console.log(qi.name, qj.name, pattern.toString())
 				}
 			}
@@ -112,5 +110,8 @@ export class NFA {
 			qRip.outgoingEdges.forEach((edge) => this.removeEdge(edge))
 			qRip.incomingEdges.forEach((edge) => this.removeEdge(edge))
 		}
+
+		const pattern = <Pattern>this.q0.outgoingEdges.get(this.F[0])?.pattern
+		console.log('RESULT =', pattern.toString())
 	}
 }
