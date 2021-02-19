@@ -84,7 +84,8 @@ export class NFA {
 	public convert(): void {
 		while (this.Q.length > 2) {
 			const qRip = this.Q.shift() as Vertex // generalize put q0 and F at the end, so start at the beginning
-			console.log(`-------- ${qRip.name} --------`)
+			const newEdges: [Vertex, Vertex, Pattern][] = []
+			console.log(`-------- Ripping out ${qRip.name} --------`)
 			for (const qi of this.Q) {
 				if (qi === this.F[0]) continue
 				for (const qj of this.Q) {
@@ -102,13 +103,17 @@ export class NFA {
 					const R4 = qi.outgoingEdges.get(qj)?.pattern
 					if (R1 === undefined || R2 === undefined || R3 === undefined || R4 === undefined)
 						throw new Error('Could not find d(q., q.) edges. Is this a GNFA?')
-					const { pattern } = this.addEdge(qi, qj, new Or([new Concat([R1, new Quantified(0, Infinity, R2), R3]), R4]))
-					console.log(qi.name, qj.name, pattern.toString())
+					newEdges.push([qi, qj, new Or([new Concat([R1, new Quantified(0, Infinity, R2), R3]), R4])])
 				}
 			}
 			// Rip out qrip
 			qRip.outgoingEdges.forEach((edge) => this.removeEdge(edge))
 			qRip.incomingEdges.forEach((edge) => this.removeEdge(edge))
+			// Place new edges
+			for (const [qi, qj, pattern] of newEdges) {
+				const edge = this.addEdge(qi, qj, pattern)
+				console.log(qi.name, 'to', qj.name, 'becomes', edge.pattern.toString())
+			}
 		}
 
 		const pattern = <Pattern>this.q0.outgoingEdges.get(this.F[0])?.pattern

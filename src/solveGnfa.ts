@@ -63,4 +63,39 @@ q2 q2 b
 q2 q1 b
 `
 
+const lab2q3a1 = `
+q0 q1 q2
+q0
+q0
+q0 q1 a
+q0 q2 b
+q1 q0 b
+q1 q2 a
+q2 q2 a
+q2 q2 b
+`
+
+const lab2q3a2 = `
+q0 q1 q2
+q0
+q0
+q0 q1 b
+q0 q2 b
+q1 q0 a
+q1 q2 a
+q2 q2 a
+q2 q2 b
+`
+
+const lab2q4a = `
+q0 q1
+q0
+q0 q1
+q0 q1 a
+q0 q0 b
+q0 q0 c
+q1 q1 a
+q1 q0 b
+`
+
 parse(lab2q5)
