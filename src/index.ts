@@ -1,5 +1,6 @@
 import { Concat, EmptySet, Epsilon, Or, Pattern, Star } from './regex'
 import simplify from './regex-simplify'
+import * as util from 'util'
 
 export class Vertex {
 	public outgoingEdges: Map<Vertex, Edge> = new Map()
@@ -89,7 +90,14 @@ export class NFA {
 			for (const qi of this.Q) {
 				if (qi === this.F[0]) continue
 				for (const qj of this.Q) {
-					if (qj === this.q0) continue
+					if (
+						qj === this.q0 ||
+						!qi.outgoingEdges.has(qRip) ||
+						util.isDeepStrictEqual(qi.outgoingEdges.get(qRip)?.pattern, new EmptySet()) ||
+						!qRip.outgoingEdges.has(qj) ||
+						util.isDeepStrictEqual(qRip.outgoingEdges.get(qj)?.pattern, new EmptySet())
+					)
+						continue
 					const R1 = qi.outgoingEdges.get(qRip)?.pattern
 					const R2 = qRip.outgoingEdges.get(qRip)?.pattern
 					const R3 = qRip.outgoingEdges.get(qj)?.pattern
