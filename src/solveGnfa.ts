@@ -7,7 +7,7 @@
  * ...
  */
 import { NFA, Vertex } from './index'
-import { Epsilon, Literal } from './regex'
+import { Epsilon, Literal, Pattern, RegexNotation } from './regex'
 
 function parse(str: string): void {
 	str = str.trim()
@@ -98,4 +98,5 @@ q1 q1 a
 q1 q0 b
 `
 
+Pattern.regexNotation = RegexNotation.POSIX_LATEX
 parse(lab2q5)
