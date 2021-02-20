@@ -56,8 +56,8 @@ export class NFA {
 	 */
 	public generalize(): void {
 		// New GNFA nodes
-		const q0 = new Vertex('GNFA Start')
-		const F = new Vertex('GNFA End')
+		const q0 = new Vertex('g_s')
+		const F = new Vertex('g_e')
 
 		this.addEdge(q0, this.q0, new Epsilon())
 		this.F.forEach((f) => this.addEdge(f, F, new Epsilon()))
@@ -82,6 +82,7 @@ export class NFA {
 	 * Performs the convert version until there are no more states apart from q0 and F
 	 */
 	public convert(): void {
+		if (this.F.length > 1) throw new Error('More than one final state. Is this a GNFA?')
 		while (this.Q.length > 2) {
 			const qRip = this.Q.shift() as Vertex // generalize put q0 and F at the end, so start at the beginning
 			const newEdges: [Vertex, Vertex, Pattern][] = []
@@ -101,8 +102,10 @@ export class NFA {
 					const R2 = qRip.outgoingEdges.get(qRip)?.pattern
 					const R3 = qRip.outgoingEdges.get(qj)?.pattern
 					const R4 = qi.outgoingEdges.get(qj)?.pattern
-					if (R1 === undefined || R2 === undefined || R3 === undefined || R4 === undefined)
-						throw new Error('Could not find d(q., q.) edges. Is this a GNFA?')
+					if (R1 === undefined) throw new Error(`Could not find d(${qi.name}, ${qRip.name}). Is this a GNFA?`)
+					if (R2 === undefined) throw new Error(`Could not find d(${qRip.name}, ${qRip.name}). Is this a GNFA?`)
+					if (R3 === undefined) throw new Error(`Could not find d(${qRip.name}, ${qj.name}). Is this a GNFA?`)
+					if (R4 === undefined) throw new Error(`Could not find d(${qi.name}, ${qj.name}). Is this a GNFA?`)
 					newEdges.push([qi, qj, new Or([new Concat([R1, new Quantified(0, Infinity, R2), R3]), R4])])
 				}
 			}
@@ -112,11 +115,12 @@ export class NFA {
 			// Place new edges
 			for (const [qi, qj, pattern] of newEdges) {
 				const edge = this.addEdge(qi, qj, pattern)
-				console.log(qi.name, 'to', qj.name, 'becomes', edge.pattern.toString())
+				console.log(qi.name, '->', qRip.name, '->', qj.name, '=', edge.pattern.toString())
 			}
 		}
 
-		const pattern = <Pattern>this.q0.outgoingEdges.get(this.F[0])?.pattern
+		const { pattern } = this.q0.outgoingEdges.get(this.F[0]) ?? {}
+		if (!pattern) throw new Error('Could not find edge from initial state to final state. Is this a GNFA?')
 		console.log('RESULT =', pattern.toString())
 	}
 }
